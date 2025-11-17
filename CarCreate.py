@@ -33,21 +33,25 @@ class Car:
     def Fgear(self,v): #calculate gearbox resistance force on car (simplified model)
         return v * self.gear_res
 
-    def Favilable(self,v): # calculate available tractive force at given speed
+    def Favailable(self,v): # calculate available tractive force at given speed
         omega_wheel = v / self.Rl  # wheel angular speed [rad/s]
         omega_motor = omega_wheel * self.i  # motor angular speed [rad/s]
         if omega_motor * 4 * self.M_max < self.P_max * 1000: # chceck if torque is power limited for 4 motors
-            return 4 * self.M_max / self.Rl  # total tractive force from 4 motors [N]
+            return 4 * self.M_max * self.i / self.Rl  # total available tractive force from 4 motors before power limit [N]
         else:
-            M = (self.P_max * 1000) / omega_motor  # torque limited by system power
-            return 4 * M / self.Rl  # total tractive force from 4 motors [N]        
+            M = (self.P_max * 1000) / (omega_motor*4)  # torque limited by system power
+            return 4 * M * self.i / self.Rl  # total available tractive force from 4 motors after power limit [N]        
 
+    def Ftractive(self,v): 
+        F_avail = self.Favailable(v)
+        F_traction_limit = self.mu_x * self.m * 9.81  # maximum tractive force limited by tire friction 
+        return min(F_avail, F_traction_limit) # return actual tractive force for entire vehicle [N]
 
 
 # Dictionary with predefined cars and their parameters
 Predefined_Cars = {
-    'CTU24': {'name': 'CTU24', 'm': 300, 'CdA': 1.2, 'P': 80, 'mu_x': 1.5, 'rr': 0.015, 'M_max': 30, 'i': 12},
-    'CTU25': {'name': 'CTU25', 'm': 250, 'CdA': 1.3, 'P': 80, 'mu_x': 1.6, 'rr': 0.015, 'M_max': 20, 'i': 12}
+    'CTU24': {'name': 'CTU24', 'm': 300, 'CdA': 1.2, 'P_max': 80, 'mu_x': 1.5, 'Rl': 0.2, 'rr': 0.015, 'gear_res': 0.001, 'M_max': 30, 'i': 12},
+    'CTU25': {'name': 'CTU25', 'm': 250, 'CdA': 1.3, 'P_max': 80, 'mu_x': 1.6, 'Rl': 0.2, 'rr': 0.015, 'gear_res': 0.001, 'M_max': 20, 'i': 12}
 }
 
 def create_car(car_name):
