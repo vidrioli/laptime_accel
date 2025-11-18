@@ -13,7 +13,7 @@ class Solver:
         self.car = car
 
     def simulate_accel(self, distance, dt=0.01):
-        v,x,t = 0,0,0 # initial speed, position, time
+        v,x,t,a = 0,0,0,0 # initial speed, position, time
         data = []  # to store simulation results
 
         steps = int(distance + 1) #estimate steps for progress bar
@@ -22,7 +22,7 @@ class Solver:
                  Fdrag = self.car.Fd(v)
                  Frolling = self.car.Frr()
                  Fgear = self.car.Fgear(v)
-                 Ftractive = self.car.Ftractive(v)
+                 Ftractive = self.car.Ftractive(v,a)
                  F_total = Ftractive - Fdrag - Frolling - Fgear # net force acting on the car
                  a = F_total / self.car.m  # acceleration
                  v_new = v + a * dt
