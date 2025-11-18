@@ -2,6 +2,7 @@
 from CarCreate import create_car
 from matplotlib import pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
 
 avto = create_car('CTU24')
@@ -15,20 +16,24 @@ class Solver:
         v,x,t = 0,0,0 # initial speed, position, time
         data = []  # to store simulation results
 
+        steps = int(distance + 1) #estimate steps for progress bar
+        with tqdm(total=distance, leave=True,  colour='green') as pbar:  # add progress bar, needs to encapsulate the while loop
+            while x < distance:
+                 Fdrag = self.car.Fd(v)
+                 Frolling = self.car.Frr()
+                 Fgear = self.car.Fgear(v)
+                 Ftractive = self.car.Ftractive(v)
+                 F_total = Ftractive - Fdrag - Frolling - Fgear # net force acting on the car
+                 a = F_total / self.car.m  # acceleration
+                 v_new = v + a * dt
+                 x_new = x + v * dt
+                 t_new = t + dt
 
-        while x < distance:
-            Fdrag = self.car.Fd(v)
-            Frolling = self.car.Frr()
-            Fgear = self.car.Fgear(v)
-            Ftractive = self.car.Ftractive(v)
-            F_total = Ftractive - Fdrag - Frolling - Fgear # net force acting on the car
-            a = F_total / self.car.m  # acceleration
-            v_new = v + a * dt
-            x_new = x + v * dt
-            t_new = t + dt
+                 data.append([v_new, x_new, t_new,Fdrag,Frolling,Fgear,Ftractive,F_total]) #store simulated data in list each new timestep is a new list
+                 v, x, t = v_new, x_new, t_new
+                 #time.sleep(0.01)
 
-            data.append([v_new, x_new, t_new,Fdrag,Frolling,Fgear,Ftractive]) #store simulated data in list each new timestep is a new list
-            v, x, t = v_new, x_new, t_new
+                 pbar.update(v * dt) # update progress bar
     
         results = np.array(data)  # convert list to numpy array
         print(f"Simulation complete. Final time is {t} s at {v} m/s")
@@ -47,6 +52,8 @@ Fdrag = result[:,3]
 Frolling = result[:,4]
 Fgear = result[:,5]
 Ftractive = result[:,6]
+F_total = result[:,7]
+
 
 # Plot results
 plt.figure(figsize=(12, 6))
@@ -63,4 +70,6 @@ plt.show()
 
 plt.figure(figsize=(12, 6))
 plt.plot(time, Ftractive, label='Tractive Force')
+plt.plot(time, F_total, label='Net Force')
+plt.legend()
 plt.show()
