@@ -5,32 +5,69 @@ import numpy as np
 from tqdm import tqdm
 
 
-avto = create_car('CTU24')
+class Euler:   # simple Euler integrator class
+    def integrate(self, f, y0, t, dt,a):
+        y_new = y0 + f(y0,a)*dt
+        return y_new
+    
+class RK4:  # runge kutta integrator class
+    def integrate(self, f, y0, t, dt,a):
+        k1 = f(y0,a)
+        k2 = f(y0 + 0.5 * dt * k1,a)
+        k3 = f(y0 + 0.5 * dt * k2,a)
+        k4 = f(y0 + dt * k3,a)    
+        y_new = y0 + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
+        return y_new
+
+
+def get_integrator(name=str):  # class factory function, returns instance of integrator class
+        if name == 'euler':
+            return Euler()
+        elif name == 'rk4':
+            return RK4()
+        else:
+            raise ValueError(f"Unknown integrator type: {name}")
+
 
 
 class Solver:
     def __init__(self, car):
         self.car = car
 
-    def simulate_accel(self, distance, dt=0.01):
-        v,x,t,a = 0,0,0,0 # initial speed, position, time
-        data = []  # to store simulation results
+    def compute_forces(self,v,a): #force calculation function
+        Fdrag = self.car.Fd(v)
+        Frolling = self.car.Frr()
+        Fgear = self.car.Fgear(v)
+        Ftractive = self.car.Ftractive(v,a)
+        F_total = Ftractive - Fdrag - Frolling - Fgear # net force acting on the car
+        a_new = F_total / self.car.m  # acceleration
+        return a_new, Fdrag, Frolling, Fgear, Ftractive, F_total
 
-        steps = int(distance + 1) #estimate steps for progress bar
+    def state_derivative(self,Y,a):
+        x_new, v_new = Y # unpack state vector
+        a_new = self.compute_forces(v_new,a)[0]
+        return np.array([v_new, a_new])  # return derivative of state vector
+
+    def simulate_accel(self, distance,solver_type='euler', dt=0.0001):
+        v,x,t,a,E = 0,0,0,0,0 # initial speed, position, time, acceleration, energy
+        Y = np.array([x,v])  # initial state vector
+        data = []  # list to store simulation results
+
+        integrator = get_integrator(solver_type)
+
         with tqdm(total=distance, leave=True,  colour='green') as pbar:  # add progress bar, needs to encapsulate the while loop
             while x < distance:
-                 Fdrag = self.car.Fd(v)
-                 Frolling = self.car.Frr()
-                 Fgear = self.car.Fgear(v)
-                 Ftractive = self.car.Ftractive(v,a)
-                 F_total = Ftractive - Fdrag - Frolling - Fgear # net force acting on the car
-                 a = F_total / self.car.m  # acceleration
-                 v_new = v + a * dt
-                 x_new = x + v * dt
+                 
+                
+                 x_new, v_new = integrator.integrate(self.state_derivative, Y, t, dt,a)
+                 a, Fdrag, Frolling, Fgear, Ftractive, F_total = self.compute_forces(v_new, a)
+                 #dE = v * Ftractive
+                 #E_new = integrator.integrate(dE, E, dt) # cumulative energy used by vehicle
+                 E_new=0
                  t_new = t + dt
-
-                 data.append([v_new, x_new, t_new,Fdrag,Frolling,Fgear,Ftractive,F_total]) #store simulated data in list each new timestep is a new list
+                 data.append([v_new, x_new, t_new,Fdrag,Frolling,Fgear,Ftractive,F_total,E_new]) #store simulated data in list each new timestep is a new list
                  v, x, t = v_new, x_new, t_new
+                 Y = np.array([x, v]) # update state vector
                  #time.sleep(0.01)
 
                  pbar.update(v * dt) # update progress bar
@@ -40,9 +77,9 @@ class Solver:
         return results
         
     
-
+avto = create_car('CTU25')
 sim = Solver(avto)
-result = sim.simulate_accel(75)  # simulate acceleration over 75 meters
+result = sim.simulate_accel(75,'rk4')  # simulate acceleration over 75 meters
 
 # Extract data for plotting
 time = result[:,2]

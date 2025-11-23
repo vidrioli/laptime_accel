@@ -71,6 +71,7 @@ class Car:
         Fr = Nr * (self.mu_x - self.mu_x_grad * (Nr/2))  # maximum tractive force on rear axle [N]
         F_traction_limit = Ff + Fr # maximum tractive force limited by tire friction 
         return min(F_avail, F_traction_limit) # return actual tractive force for entire vehicle [N]
+    
 
 #(self,name,m,CoGz,WB,wd,CdA,ClA,CoP,P_max,mu_x,mu_x_grad,Rl,rr,gear_res,M_max,i):
 # Dictionary with predefined cars and their parameters
