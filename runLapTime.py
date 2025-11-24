@@ -19,7 +19,6 @@ class RK4:  # runge kutta integrator class
         y_new = y0 + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
         return y_new
 
-
 def get_integrator(name=str):  # class factory function, returns instance of integrator class
         if name == 'euler':
             return Euler()
@@ -48,7 +47,7 @@ class Solver:
         a_new = self.compute_forces(v_new,a)[0]
         return np.array([v_new, a_new])  # return derivative of state vector
 
-    def simulate_accel(self, distance,solver_type='euler', dt=0.0001):
+    def simulate_accel(self, distance,solver_type='euler', dt=0.001):
         v,x,t,a,E = 0,0,0,0,0 # initial speed, position, time, acceleration, energy
         Y = np.array([x,v])  # initial state vector
         data = []  # list to store simulation results
@@ -57,7 +56,6 @@ class Solver:
 
         with tqdm(total=distance, leave=True,  colour='green') as pbar:  # add progress bar, needs to encapsulate the while loop
             while x < distance:
-                 
                 
                  x_new, v_new = integrator.integrate(self.state_derivative, Y, t, dt,a)
                  a, Fdrag, Frolling, Fgear, Ftractive, F_total = self.compute_forces(v_new, a)
