@@ -19,16 +19,16 @@ class Car:
         self.M_max = M_max           # [Nm] maximum individual motor torque
         self.i = i                   # [-] planet gearbox gear ratio as i:1
 
-    def __str__(self):       #""" used to print into new lines"   ##############TODO: add more parameters
+    def __str__(self):       #""" used to print into new lines"   
         return(f"""{self.name} vehicle with parameters: 
               Mass: {self.m} kg
-              
               Aerodynamic Drag Coefficient * Frontal Area: {self.CdA} m^2
               Maximum System Power: {self.P_max} kW
               Longitudinal Tire Friction Coefficient: {self.mu_x}
               Tire Rolling Resistance Coefficient: {self.rr}
               Maximum Individual Motor Torque: {self.M_max} Nm
               Planet Gearbox Gear Ratio: {self.i}:1
+              and others...
             """) 
     
     def Fd(self,v,rho=1.016): # calculate aerodynamic drag force on car, default air density at Hockenheimring during August

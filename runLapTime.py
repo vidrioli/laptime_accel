@@ -54,8 +54,8 @@ class Solver:
 
         integrator = get_integrator(solver_type)
 
-        with tqdm(total=distance, leave=True,  colour='green') as pbar:  # add progress bar, needs to encapsulate the while loop
-            while x < distance:
+        
+        while x < distance:
                 
                  x_new, v_new = integrator.integrate(self.state_derivative, Y, t, dt,a)
                  a, Fdrag, Frolling, Fgear, Ftractive, F_total = self.compute_forces(v_new, a)
@@ -67,44 +67,44 @@ class Solver:
                  v, x, t = v_new, x_new, t_new
                  Y = np.array([x, v]) # update state vector
                  #time.sleep(0.01)
-
-                 pbar.update(v * dt) # update progress bar
     
         results = np.array(data)  # convert list to numpy array
-        print(f"Simulation complete. Final time is {t} s at {v} m/s")
         return results
-        
+
+if __name__ == "__main__":  #run simulation only if runLapTime.py is ran directly, not when imported as module        
+    avto = create_car('CTU25')
+    sim = Solver(avto)
+    result = sim.simulate_accel(75,'rk4')  # simulate acceleration over 75 meters
     
-avto = create_car('CTU25')
-sim = Solver(avto)
-result = sim.simulate_accel(75,'rk4')  # simulate acceleration over 75 meters
 
-# Extract data for plotting
-time = result[:,2]
-velocity = result[:,0]
-position = result[:,1]
-Fdrag = result[:,3]
-Frolling = result[:,4]
-Fgear = result[:,5]
-Ftractive = result[:,6]
-F_total = result[:,7]
+    # Extract data for plotting
+    velocity = result[:,0]
+    position = result[:,1]
+    time = result[:,2]
+    Fdrag = result[:,3]
+    Frolling = result[:,4]
+    Fgear = result[:,5]
+    Ftractive = result[:,6]
+    F_total = result[:,7]
+    print(f"Simulation complete. Final time is {round(time[-1],3)} s at {round(velocity[-1],2)} m/s")
 
+    # Plot results
+    plt.figure(figsize=(12, 6))
+    plt.subplot(2, 1, 1)
+    plt.plot(time, velocity)
+    plt.title('Acceleration Simulation Results')
+    plt.grid()
+    plt.ylabel('Velocity (m/s)')
+    plt.subplot(2, 1, 2)
+    plt.plot(time, position)
+    plt.grid()
+    plt.xlabel('Time (s)')
+    plt.ylabel('Position (m)')
+    plt.tight_layout()
+    plt.show()
 
-# Plot results
-plt.figure(figsize=(12, 6))
-plt.subplot(2, 1, 1)
-plt.plot(time, velocity)
-plt.title('Acceleration Simulation Results')
-plt.ylabel('Velocity (m/s)')
-plt.subplot(2, 1, 2)
-plt.plot(time, position)
-plt.xlabel('Time (s)')
-plt.ylabel('Position (m)')
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(12, 6))
-plt.plot(time, Ftractive, label='Tractive Force')
-plt.plot(time, F_total, label='Net Force')
-plt.legend()
-plt.show()
+    plt.figure(figsize=(12, 6))
+    plt.plot(time, Ftractive, label='Tractive Force')
+    plt.plot(time, F_total, label='Net Force')
+    plt.legend()
+    plt.show()
