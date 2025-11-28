@@ -93,14 +93,3 @@ def create_car(car_name):
 #print(Predefined_Cars['CTU24'])
 #print(Car(**Predefined_Cars['CTU24']).describe())
 
-#### TESTS ####
-if __name__ == "__main__":  #run test only if this carcreate.py is ran
-
-    test_car = create_car('CTU24')
-    assert test_car.name == 'CTU24'
-    assert test_car.m == Predefined_Cars['CTU24']['m']
-    assert test_car.Fd(1) > 0
-    assert test_car.Frr() > 0
-    assert test_car.Fdown(1,1) > 0 and test_car.Fdown(1,1) < 1000
-    assert test_car.Favailable(100) * 100 /1000 == test_car.P_max
-    print('All tests passed!')

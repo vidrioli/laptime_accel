@@ -45,8 +45,8 @@ final_times = final_times - final_times[0]  # calculate time difference from bas
 
 # Make the bar chart
 plt.figure(figsize=(10,6))
-plt.bar(labels, final_times, color=['blue' if l=='baseline' else 'orange' for l in labels])
-plt.ylabel("Final Simulation Time [s]")
+plt.bar(labels, final_times, color='orange')
+plt.ylabel("Final Simulation Time diff from baseline [s]")
 plt.xlabel("Simulation Case")
 plt.title("Effect of 10% Parameter Increase on Final Time")
 plt.xticks(rotation=45)
