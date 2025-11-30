@@ -38,7 +38,7 @@ class Car:
         return self.m * 9.81 * self.rr
     
     def Fgear(self,v): #calculate gearbox resistance force on car (simplified model)
-        return v * self.gear_res
+        return v * self.gear_res 
     
     def Fdown(self,v,rho=1.016): #calculate vehicle downforce, default air density at Hockenheimring during August
         return 0.5 * rho * self.ClA * v**2
@@ -76,8 +76,8 @@ class Car:
 #(self,name,m,CoGz,WB,wd,CdA,ClA,CoP,P_max,mu_x,mu_x_grad,Rl,rr,gear_res,M_max,i):
 # Dictionary with predefined cars and their parameters
 Predefined_Cars = {
-    'CTU24': {'name': 'CTU24', 'm': 300, 'CoGz': 0.209, 'WB': 1.53, 'wd': 0.53, 'CdA': 1.2, 'ClA': 5, 'CoP': 0.465, 'P_max': 80, 'mu_x': 1.5, 'mu_x_grad': 7.9e-05, 'Rl': 0.2, 'rr': 0.015, 'gear_res': 0.001, 'M_max': 30, 'i': 12},
-    'CTU25': {'name': 'CTU25', 'm': 250, 'CoGz': 0.209, 'WB': 1.53, 'wd': 0.53, 'CdA': 1.3, 'ClA': 6, 'CoP': 0.465, 'P_max': 80, 'mu_x': 1.6, 'mu_x_grad': 7.9e-05, 'Rl': 0.2, 'rr': 0.015, 'gear_res': 0.001, 'M_max': 30, 'i': 12}
+    'CTU24': {'name': 'CTU24', 'm': 300, 'CoGz': 0.209, 'WB': 1.53, 'wd': 0.53, 'CdA': 1.2, 'ClA': 5, 'CoP': 0.465, 'P_max': 80, 'mu_x': 1.5, 'mu_x_grad': 7.9e-05, 'Rl': 0.2, 'rr': 0.015, 'gear_res': 3, 'M_max': 30, 'i': 12},
+    'CTU25': {'name': 'CTU25', 'm': 250, 'CoGz': 0.209, 'WB': 1.53, 'wd': 0.53, 'CdA': 1.3, 'ClA': 6, 'CoP': 0.465, 'P_max': 80, 'mu_x': 1.6, 'mu_x_grad': 7.9e-05, 'Rl': 0.2, 'rr': 0.015, 'gear_res': 3, 'M_max': 30, 'i': 12}
 }
 
 def create_car(car_name):

@@ -3,6 +3,7 @@ from CarCreate import create_car
 from matplotlib import pyplot as plt
 import numpy as np
 from tqdm import tqdm
+from matplotlib.animation import FuncAnimation
 
 
 class Euler:   # simple Euler integrator class
@@ -63,7 +64,7 @@ class Solver:
                  #E_new = integrator.integrate(dE, E, dt) # cumulative energy used by vehicle
                  E_new=0
                  t_new = t + dt
-                 data.append([v_new, x_new, t_new,Fdrag,Frolling,Fgear,Ftractive,F_total,E_new]) #store simulated data in list each new timestep is a new list
+                 data.append([v_new, x_new, t_new,Fdrag,Frolling,Fgear,Ftractive,F_total,E_new,a]) #store simulated data in list each new timestep is a new list
                  v, x, t = v_new, x_new, t_new
                  Y = np.array([x, v]) # update state vector
                  #time.sleep(0.01)
@@ -71,40 +72,135 @@ class Solver:
         results = np.array(data)  # convert list to numpy array
         return results
 
+class PostProcessor:
+    def __init__(self, results):
+        self.results = results 
+        self.velocity = self.results[:,0]    # save as attributes for reuse in other methods
+        self.position = self.results[:,1]
+        self.time = self.results[:,2]
+        self.Fdrag = self.results[:,3]
+        self.Frolling = self.results[:,4]
+        self.Fgear = self.results[:,5]
+        self.Ftractive = self.results[:,6]
+        self.F_total = self.results[:,7]
+        self.a = self.results[:,9]
+        self.loss_force = self.Fdrag + self.Frolling + self.Fgear   
+        self.P = self.Ftractive * self.velocity  
+        self.P_loss = self.loss_force * self.velocity     
+        print(f"Simulation complete. Final time is {round(self.time[-1],3)} s at {round(self.velocity[-1],2)} m/s")
+
+
+    def Animation(self):
+       
+
+        fig = plt.figure(figsize=(12,8))
+        gs = fig.add_gridspec(2, 2)
+        fig.canvas.manager.set_window_title('Acceleration Sim Animation')
+
+        self.ax_track = fig.add_subplot(gs[0, 0]) # plot simple track and car as red dot
+        self.ax_track.set_xlim(0, self.position[-1])
+        self.ax_track.set_ylim(-1, 1)
+        self.track_line, = self.ax_track.plot([0, self.position[-1]], [0, 0], 'k--', lw=2) # comma to only return the first element (line object)
+        self.car_dot, = self.ax_track.plot([], [], 'ro', markersize=14)
+        self.ax_track.set_title("Car on Track")
+        self.ax_track.axis('off')
+
+        self.ax_vel = fig.add_subplot(gs[0, 1])
+        self.ax_vel.set_xlim(np.min(self.time), np.max(self.time))
+        self.ax_vel.set_ylim(np.min(self.velocity), np.max(self.velocity)+3)
+        self.vel_line, = self.ax_vel.plot([], [], 'b-')
+        self.ax_vel.set_xlabel("Time (s)")
+        self.ax_vel.set_ylabel("Velocity (m/s)")
+        self.ax_vel.set_title("Velocity vs Time")
+        self.ax_vel.grid()
+
+        self.ax_acc = fig.add_subplot(gs[1, 0])
+        self.ax_acc.set_xlim(np.min(self.time), np.max(self.time))
+        self.ax_acc.set_ylim(np.min(self.a)-1, np.max(self.a) + 1)
+        self.acc_line, = self.ax_acc.plot([], [], 'g-', lw=1.5)
+        self.ax_acc.set_xlabel("Time (s)")
+        self.ax_acc.set_ylabel("Acceleration (m/s$^2$)")
+        self.ax_acc.set_title("Acceleration vs Time")  
+        self.ax_acc.grid()
+
+        self.ax_bar = fig.add_subplot(gs[1, 1])
+        self.bar_labels = ['Tractive', 'Loss', 'Net']
+        self.bar_values = [0,0,0]
+        self.bars = self.ax_bar.barh(self.bar_labels, self.bar_values, color=['tab:green', 'tab:red', 'tab:blue'])
+        self.ax_bar.set_xlim(min(-np.max(self.Ftractive), -np.max(self.loss_force)),np.max(self.Ftractive)*1.1)
+        self.ax_bar.set_title('Forces (Animated)')
+        self.ax_bar.set_xlabel('Force (N)')
+
+        # Animate
+        self.anim = FuncAnimation(
+            fig, self.update,
+            frames=len(self.time),
+            interval=0.5, blit=True, repeat=False)
+        plt.tight_layout()
+        #plt.show()
+
+    def update(self, frame):
+        
+        self.car_dot.set_data([self.position[frame]], [0]) #modify car dot object data for efficient animation, without needing to redraw entire plot
+        self.vel_line.set_data(self.time[:frame], self.velocity[:frame])
+        self.acc_line.set_data(self.time[:frame], self.a[:frame])
+
+        self.bars[0].set_width(self.Ftractive[frame])
+        self.bars[1].set_width(self.loss_force[frame])
+        self.bars[2].set_width(self.F_total[frame])
+
+        return self.car_dot, self.vel_line, self.acc_line, *self.bars
+    
+    def Plot_Forces(self):
+        F_max_idx = np.argmax(self.Ftractive)
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(10,8),)
+        fig.canvas.manager.set_window_title('Forces Plot')
+        ax1.plot(self.time, self.F_total, label='Net Force')
+        ax1.plot(self.time, self.Fdrag, label='Drag Force')
+        ax1.plot(self.time, self.Frolling, label='Rolling Resistance')
+        ax1.plot(self.time, self.Fgear, label='Gearbox Resistance')
+        ax1.vlines(self.time[F_max_idx],0,(np.max(self.Ftractive))*1.1, color='black', linestyle='--', label='Max Tractive Force Point')
+        ax1.legend()
+        ax1.set_title('Forces during Acceleration Simulation')
+        ax1.set_ylabel('Force (N)')
+        ax1.set_xlabel('Time (s)')
+        ax1.grid()
+
+        ax2.plot(self.time, self.P / 1000, 'g-', label='Tractive Power')
+        ax2.plot(self.time, self.P_loss / 1000, 'r-', label='Power Losses')
+        ax2.vlines(self.time[F_max_idx],0,(np.max(self.P / 1000))*1.1, color='black', linestyle='--', label='Tractive Power Limit Reached')
+        ax2.set_ylabel('Power (kW)')
+        ax2.set_xlabel('Time (s)')
+        ax2.legend()
+        ax2.set_title('Power during Acceleration Simulation')
+        ax2.grid()
+        #plt.show()  
+
+    def show_all(self):
+        plt.show() # show all plots and animations at the same time
+
+    def Plot_performance(self):
+        plt.figure(figsize=(10,6))
+        plt.plot(self.position, self.velocity, 'b-')
+        plt.title("Velocity vs Position")
+        plt.xlabel("Position (m)")
+        plt.ylabel("Velocity (m/s)")
+        plt.grid()
+        plt.show()
+
+
+    
+
 if __name__ == "__main__":  #run simulation only if runLapTime.py is ran directly, not when imported as module        
     avto = create_car('CTU25')
     sim = Solver(avto)
-    result = sim.simulate_accel(75,'rk4')  # simulate acceleration over 75 meters
-    
+    result = sim.simulate_accel(75,'euler')  # simulate acceleration over 75 meters
 
-    # Extract data for plotting
-    velocity = result[:,0]
-    position = result[:,1]
-    time = result[:,2]
-    Fdrag = result[:,3]
-    Frolling = result[:,4]
-    Fgear = result[:,5]
-    Ftractive = result[:,6]
-    F_total = result[:,7]
-    print(f"Simulation complete. Final time is {round(time[-1],3)} s at {round(velocity[-1],2)} m/s")
+    pp = PostProcessor(result)
 
-    # Plot results
-    plt.figure(figsize=(12, 6))
-    plt.subplot(2, 1, 1)
-    plt.plot(time, velocity)
-    plt.title('Acceleration Simulation Results')
-    plt.grid()
-    plt.ylabel('Velocity (m/s)')
-    plt.subplot(2, 1, 2)
-    plt.plot(time, position)
-    plt.grid()
-    plt.xlabel('Time (s)')
-    plt.ylabel('Position (m)')
-    plt.tight_layout()
-    plt.show()
+    pp.Plot_performance
+    pp.Plot_Forces()
+    pp.Animation()
+    pp.show_all()
 
-    plt.figure(figsize=(12, 6))
-    plt.plot(time, Ftractive, label='Tractive Force')
-    plt.plot(time, F_total, label='Net Force')
-    plt.legend()
-    plt.show()
+
