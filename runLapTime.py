@@ -90,7 +90,7 @@ class PostProcessor:
         print(f"Simulation complete. Final time is {round(self.time[-1],3)} s at {round(self.velocity[-1],2)} m/s")
 
 
-    def Animation(self):
+    def Animation(self,delay=0.5):
        
 
         fig = plt.figure(figsize=(12,8))
@@ -135,7 +135,7 @@ class PostProcessor:
         self.anim = FuncAnimation(
             fig, self.update,
             frames=len(self.time),
-            interval=0.5, blit=True, repeat=False)
+            interval=delay, blit=True, repeat=False)
         plt.tight_layout()
         #plt.show()
 
@@ -180,13 +180,13 @@ class PostProcessor:
         plt.show() # show all plots and animations at the same time
 
     def Plot_performance(self):
-        plt.figure(figsize=(10,6))
-        plt.plot(self.position, self.velocity, 'b-')
-        plt.title("Velocity vs Position")
-        plt.xlabel("Position (m)")
-        plt.ylabel("Velocity (m/s)")
+        plt.figure(figsize=(12,8))
+        plt.plot(self.velocity, self.a, 'b-')
+        plt.title("Longitudinal Acceleration vs Velocity")
+        plt.ylabel("Acceleration (m/s$^2$)")
+        plt.xlabel("Velocity (m/s)")
         plt.grid()
-        plt.show()
+
 
 
     
@@ -198,7 +198,7 @@ if __name__ == "__main__":  #run simulation only if runLapTime.py is ran directl
 
     pp = PostProcessor(result)
 
-    pp.Plot_performance
+    pp.Plot_performance()
     pp.Plot_Forces()
     pp.Animation()
     pp.show_all()
