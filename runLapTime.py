@@ -155,6 +155,7 @@ class PostProcessor:
         F_max_idx = np.argmax(self.Ftractive)
         fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(10,8),)
         fig.canvas.manager.set_window_title('Forces Plot')
+        ax1.plot(self.time, self.Ftractive, label='Tractive Force')
         ax1.plot(self.time, self.F_total, label='Net Force')
         ax1.plot(self.time, self.Fdrag, label='Drag Force')
         ax1.plot(self.time, self.Frolling, label='Rolling Resistance')
