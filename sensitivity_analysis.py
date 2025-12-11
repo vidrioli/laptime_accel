@@ -1,4 +1,4 @@
-from CarCreate import create_car
+from src.CarCreate import create_car
 from matplotlib import pyplot as plt
 import numpy as np
 from runLapTime import Solver
