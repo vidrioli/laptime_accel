@@ -1,5 +1,5 @@
 import pytest
-from laptime_accel.src.CarCreate import create_car , Predefined_Cars
+from src.CarCreate import create_car , Predefined_Cars
 from runLapTime import Solver, get_integrator, Euler, RK4
 
 
